@@ -1,0 +1,164 @@
+
+# В файле с логами
+# по метке времени найти дату самого позднего лога.
+# Логи по ссылке https://drive.google.com/open?id=1pKGu-u2Vvtx4xK8i2ZhOzE5rBXyO4qd8
+# прочитаны и скопированы в файл C:\PythonDrom\Tests_2022\xxxTests\logFile.txt
+
+from datetime import datetime
+import copy
+
+# Объявление глобальной переменной.
+# Переменная, доступ к которой можно получить из любого места в коде,
+# называется глобальной. Ее можно определить вне блока.
+# То есть, глобальная переменная, объявленная вне функции,
+# доступна внутри нее.
+# Входной файл
+inputFile = "C:\\PythonDrom\\Tests_2022\\xxxTests\\logFile.txt"
+
+indexedStrDate = []
+newOrderedStrDate = []
+lstRealDate = []
+indexedRealDate = []
+
+# ========================================================================
+# Класс datetime - метод strptime(). Он позволяет распарсить строку и
+# преобразовать ее в дату. Этот метод принимает два параметра:
+# strptime(str, format)
+# Первый параметр str представляет строковое определение даты и времени,
+# второй - формат, который определяет, как различные части даты и времени
+# расположены в этой строке.
+
+# ========================================================================
+# функция для изменения порядка в проиндексированном списке логов
+def NewOrder():
+    for ird in indexedRealDate:
+        for isd in indexedStrDate:
+            if isd[0] == ird[0]:
+                newOrderedStrDate.append(copy.copy(isd[1]))
+                indexedStrDate.remove(isd)
+                break
+# ======================== quick_sort временного списка ==================
+# Быстрая сортировка начинается с разбиения списка и выбора
+# одного из элементов в качестве опорного. А всё остальное передвигается так,
+# чтобы этот элемент встал на своё место. Все элементы меньше опорного
+# перемещаются влево, а равные и большие элементы перемещаются вправо.
+# Способ разбиения списка, который здесь реализован, соответствует схеме
+# Хоара (создателя этого алгоритма).
+# ========================================================================
+def partition(indexedRealData, low, high):
+    # В качестве опорного элемента выбирается средний элемент в списке.
+    # Также в качестве опорного возможен выбор первого, последнего или
+    # произвольного элементов
+
+    pivot = indexedRealData[(low + high) // 2]
+    i = low - 1
+    j = high + 1
+    while True:
+        i += 1
+        while (indexedRealData[i])[1] < pivot[1]:
+            i += 1
+
+        j -= 1
+        while (indexedRealData[j])[1] > pivot[1]:
+            j -= 1
+
+        if i >= j:
+            return j
+
+        # Если элемент с индексом i (слева от опорного) больше, чем
+        # элемент с индексом j (справа от опорного) - они меняются местами
+        indexedRealData[i], indexedRealData[j] = indexedRealData[j], indexedRealData[i]
+
+def quick_sort(indexedRealData):
+    # Вспомогательная функция. Вызывается рекурсивно
+    def _quick_sort(items, low, high):
+        if low < high:
+            # This is the index after the pivot, where our lists are split
+            split_index = partition(items, low, high)
+            _quick_sort(items, low, split_index)
+            _quick_sort(items, split_index + 1, high)
+
+    _quick_sort(indexedRealData, 0, len(indexedRealData) - 1)
+# ========================================================================
+
+def RealDatasFormer(timeStr):
+    return datetime.strptime(timeStr, "%Y-%m-%d %H:%M:%S")
+    #                            год-месяц-день час:минута:секунда
+
+def lstStrDateBuilder(strKey):
+
+    # Фрагмент логовской строки с временнОй записью (начало строки ... запятая)
+    timeInfo = ''
+    for str in strKey:
+        if str == ',':
+            break
+        else:
+            # вот она формируется
+            timeInfo = ''.join([timeInfo, str])
+
+    # print(f'timeInfo: {timeInfo}')
+    # Сформированная строка подаётся на вход методу преобразования,
+    # далее объект-представитель класса datetime включается
+    # в глобальный список объектов
+    lstRealDate.append(RealDatasFormer(timeInfo))
+
+
+def DoIt(inputFile):
+    lstStr = []
+
+    with open(inputFile, 'r') as f:
+        lstStr = f.readlines()
+
+    # На исходный лог из списка логов навесили индекс.
+    # В записи индекс идёт первым, за ним идёт лог.
+    i = 0
+    for str in lstStr:
+        # strC = copy.copy(str)
+        # indexedStrDate.append([i, [strC]])
+        indexedStrDate.append([i, [str]])
+        i += 1
+        lstStrDateBuilder(str)
+    # Получился проиндексированный список логов
+
+    # Глобальный список временнЫх объектов класса datetime построен.
+    # По порядку он совпадает с объектами списка логов.
+    # Теперь его нужно проиндексировать как и список исходных логов
+    i = 0
+    for dt in lstRealDate:
+        #dtC = copy.copy(dt)
+        #indexedRealDate.append([i, [dtC]])
+        indexedRealDate.append([i, [dt]])
+        i += 1
+    # Получился проиндексированный список временнЫх объектов
+
+    print('**********')
+    print(indexedStrDate)
+    print('**********\n')
+    print('**********')
+    print(indexedRealDate)
+    print('**********')
+
+    # Теперь - сортировка списка indexedRealDate по временнОму элементу
+    # В качестве первого аргумента функции быстрой сортировки используется
+    # глобальная переменная: ссылка на список indexedRealDate
+    quick_sort(indexedRealDate)
+
+    print('**********')
+    print(indexedRealDate)
+    print('**********\n')
+
+    # список логов переписывается в новом порядке,
+    # который задаётся отсортированным по временнОму элементу списком indexedRealDate
+    NewOrder()
+    print('**********')
+    print(newOrderedStrDate)
+    print('**********')
+
+def main(inputFile):
+    DoIt(inputFile)
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    main(inputFile)
+
+
